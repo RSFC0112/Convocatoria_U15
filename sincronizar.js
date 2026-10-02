@@ -1,64 +1,17 @@
 const { createClient } = require('@supabase/supabase-js');
 const XLSX = require('xlsx');
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
 
 const SUPABASE_URL = 'https://fjbbrzhqlvbkliskslqs.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_QRpv4Rs_fIJ8kXvTegR25w_t2SRSExp';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-function normalizarTexto(valor) {
-    return String(valor ?? '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim();
-}
-
-function cargarJugadoresU15DelIndex() {
-    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-    const bloqueJugadores = /const baseDeDatosJugadores = \[([\s\S]*?)\];/.exec(html)?.[1];
-    if (!bloqueJugadores) throw new Error('No se encontró baseDeDatosJugadores en index.html.');
-
-    const patronJugador = /\{\s*id:\s*\d+,\s*dorsal:\s*[^,]+,\s*nombre:\s*"([^"]+)",[^}]*?\bposicion:\s*"([^"]+)"/g;
-    const jugadores = Array.from(bloqueJugadores.matchAll(patronJugador), coincidencia => ({
-        nombre: normalizarTexto(coincidencia[1]),
-        posicion: coincidencia[2]
-    }));
-    if (jugadores.length === 0) throw new Error('No se encontraron jugadores con posición en index.html.');
-    return jugadores;
-}
-
-function obtenerPosicionU15(nombre, apellido1, jugadoresIndex) {
-    const primerNombre = normalizarTexto(nombre).split(' ')[0];
-    const primerApellido = normalizarTexto(apellido1);
-    const coincidencias = jugadoresIndex.filter(jugador => {
-        const tokens = jugador.nombre.split(' ');
-        return tokens.includes(primerNombre) && tokens.includes(primerApellido);
-    });
-
-    if (coincidencias.length !== 1) {
-        console.warn(`  -> No se pudo asociar una posición única a ${nombre} ${apellido1 || ''}.`);
-        return null;
-    }
-    return coincidencias[0].posicion;
-}
-
-function obtenerColumnasDatosJugador(filas) {
-    const encabezados = filas.find(fila =>
-        fila?.some(celda => normalizarTexto(celda) === 'dorsal') &&
-        fila.some(celda => normalizarTexto(celda) === 'fecha nac')
-    );
-    if (!encabezados) return null;
-
-    return {
-        dorsal: encabezados.findIndex(celda => normalizarTexto(celda) === 'dorsal'),
-        fechaNacimiento: encabezados.findIndex(celda => normalizarTexto(celda) === 'fecha nac')
-    };
-}
-
+const ANIO_ACTUAL = new Date().getUTCFullYear();
+const normalizarNombre = nombre => String(nombre || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 function parsearFechaExcel(valorExcel) {
     if (valorExcel === undefined || valorExcel === null || valorExcel === '') return null;
     if (valorExcel instanceof Date) return Number.isNaN(valorExcel.getTime()) ? null : valorExcel;
@@ -73,7 +26,12 @@ function parsearFechaExcel(valorExcel) {
     const texto = String(valorExcel).trim();
     let partes = texto.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (partes) {
-        return new Date(Date.UTC(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3])));
+        const anio = Number(partes[1]);
+        const mes = Number(partes[2]);
+        const dia = Number(partes[3]);
+        const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+        if (fecha.getUTCFullYear() !== anio || fecha.getUTCMonth() !== mes - 1 || fecha.getUTCDate() !== dia) return null;
+        return fecha;
     }
 
     partes = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -82,43 +40,32 @@ function parsearFechaExcel(valorExcel) {
         const mes = Number(partes[2]);
         const anio = Number(partes[3]);
         const fecha = new Date(Date.UTC(anio, mes - 1, dia));
-        if (fecha.getUTCMonth() !== mes - 1 || fecha.getUTCDate() !== dia) return null;
+        if (fecha.getUTCFullYear() !== anio || fecha.getUTCMonth() !== mes - 1 || fecha.getUTCDate() !== dia) return null;
         return fecha;
     }
 
-    const fechaParsed = new Date(texto);
-    return Number.isNaN(fechaParsed.getTime()) ? null : fechaParsed;
-}
-
-function obtenerEstadoEntrenamiento(valor) {
-    if (valor === undefined || valor === null || String(valor).trim() === '') return null;
-    const numero = Number(valor);
-    return [0, 0.5, 1].includes(numero) ? numero : null;
-}
-
-function obtenerEstadoPartido(valor) {
-    const texto = String(valor ?? '').trim().toUpperCase().replace(/\s+/g, '');
-    if (texto === 'X' || texto === 'P(X)') return 0;
-    if (texto === '1' || texto === '1.0') return 1;
     return null;
-}
-
-function obtenerNumeroResumen(valor) {
-    const numero = Number(valor);
-    return valor !== undefined && valor !== null && valor !== '' && Number.isFinite(numero) ? numero : 0;
 }
 
 function formatearFechaDDMMYYYY(valorExcel) {
     if (valorExcel === undefined || valorExcel === null || valorExcel === '') return 'NA';
     const fechaObj = parsearFechaExcel(valorExcel);
-    if (!fechaObj) return String(valorExcel).trim();
+    if (!fechaObj) return 'NA';
     const anio = fechaObj.getUTCFullYear();
     const mes = String(fechaObj.getUTCMonth() + 1).padStart(2, '0');
     const dia = String(fechaObj.getUTCDate()).padStart(2, '0');
     return `${dia}/${mes}/${anio}`;
 }
 
-async function sincronizarU15() {
+function obtenerDiaUTC(fecha) {
+    return Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate());
+}
+
+function esFechaIgualOPosterior(fecha, fechaLimite) {
+    return obtenerDiaUTC(fecha) >= obtenerDiaUTC(fechaLimite);
+}
+
+async function sincronizarCategorias() {
     try {
         const urlExcelEnLinea = 'https://docs.google.com/spreadsheets/d/1gpY4TcpxmBebSk9Popp5IK7tYVriTTT-/export?format=xlsx';
 
@@ -141,165 +88,267 @@ async function sincronizarU15() {
             return;
         }
 
-        const columnasDatosJugador = obtenerColumnasDatosJugador(filas);
-        if (!columnasDatosJugador || columnasDatosJugador.dorsal < 0 || columnasDatosJugador.fechaNacimiento < 0) {
-            console.error('Error: No se encontraron las columnas DORSAL y FECHA NAC. en el Excel.');
+        const filaFechas = filas[6] || [];
+        const normalizarEncabezado = valor => String(valor || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
+        let indiceNombre = -1;
+        let indiceApellido1 = -1;
+        let indiceDorsal = -1;
+        let indiceFechaNacimiento = -1;
+        let indiceFechaInscripcion = -1;
+        let indiceEntrenamientosCumplidos = -1;
+        let indiceEntrenamientosOfrecidos = -1;
+        let indicePartidosJugados = -1;
+        let indicePartidosProgramados = -1;
+
+        for (const fila of filas.slice(0, 10)) {
+            (fila || []).forEach((valor, indice) => {
+                const encabezado = normalizarEncabezado(valor);
+                if (/\bnombres?\b/.test(encabezado) && indiceNombre === -1) {
+                    indiceNombre = indice;
+                }
+                if ((/\bapellido\s*(1|uno)\b/.test(encabezado)
+                    || /\bprimer apellido\b/.test(encabezado)
+                    || /\bapellido paterno\b/.test(encabezado))
+                    && indiceApellido1 === -1) {
+                    indiceApellido1 = indice;
+                }
+                if (encabezado === 'dorsal' && indiceDorsal === -1) {
+                    indiceDorsal = indice;
+                }
+                if (/^fecha nac\b/.test(encabezado) && indiceFechaNacimiento === -1) {
+                    indiceFechaNacimiento = indice;
+                }
+                if ((/\bfecha\b.*\b(inscripcion|ingreso|registro)\b/.test(encabezado)
+                    || /\b(inscripcion|ingreso|registro)\b.*\bfecha\b/.test(encabezado))
+                    && indiceFechaInscripcion === -1) {
+                    indiceFechaInscripcion = indice;
+                }
+                if (encabezado === 'anual cumplido' && indiceEntrenamientosCumplidos === -1) {
+                    indiceEntrenamientosCumplidos = indice;
+                }
+                if (encabezado === 'anual ofrecido' && indiceEntrenamientosOfrecidos === -1) {
+                    indiceEntrenamientosOfrecidos = indice;
+                }
+                if (encabezado === 'jugados' && indicePartidosJugados === -1) {
+                    indicePartidosJugados = indice;
+                }
+                if (encabezado === 'programados' && indicePartidosProgramados === -1) {
+                    indicePartidosProgramados = indice;
+                }
+            });
+            if (indiceNombre !== -1 && indiceApellido1 !== -1 && indiceDorsal !== -1
+                && indiceFechaNacimiento !== -1 && indiceFechaInscripcion !== -1
+                && indiceEntrenamientosCumplidos !== -1 && indiceEntrenamientosOfrecidos !== -1
+                && indicePartidosJugados !== -1 && indicePartidosProgramados !== -1) break;
+        }
+
+        if ([indiceNombre, indiceApellido1, indiceDorsal, indiceFechaNacimiento, indiceFechaInscripcion, indiceEntrenamientosCumplidos,
+            indiceEntrenamientosOfrecidos, indicePartidosJugados, indicePartidosProgramados].includes(-1)) {
+            console.error('Error: Faltan encabezados de identidad, dorsal, fecha de nacimiento, inscripción o estadísticas anuales en las primeras filas.');
             return;
         }
+        console.log(`Columnas detectadas: nombre ${indiceNombre + 1}, primer apellido ${indiceApellido1 + 1}, dorsal ${indiceDorsal + 1}, fecha de nacimiento ${indiceFechaNacimiento + 1}, fecha de inscripción ${indiceFechaInscripcion + 1}, entrenamientos ${indiceEntrenamientosCumplidos + 1}/${indiceEntrenamientosOfrecidos + 1}, partidos ${indicePartidosJugados + 1}/${indicePartidosProgramados + 1}`);
 
-        const jugadoresU15DelIndex = cargarJugadoresU15DelIndex();
-        const filaFechas = filas[6] || [];
-        const filaSecciones = filas[3] || [];
-        const indiceInicioEntrenamientos = filaSecciones.findIndex(celda => normalizarTexto(celda).includes('asistencia'));
-        const indiceInicioConvocatorias = filaSecciones.findIndex(celda => normalizarTexto(celda).includes('convocatorias'));
+        const categorias = ['U13', 'U15'];
+        const jugadoresPorCategoria = new Map();
+        const siguienteIdPorCategoria = new Map();
+        for (const categoria of categorias) {
+            const { data, error } = await supabase
+                .from(`Estadísticas_${categoria}`)
+                .select('id_jugador,nombre,posicion');
 
-        if (indiceInicioEntrenamientos < 0 || indiceInicioConvocatorias <= indiceInicioEntrenamientos) {
-            throw new Error('No se encontraron los encabezados de ASISTENCIA y CONVOCATORIAS en el Excel.');
+            if (error) {
+                console.error(`Error al consultar la plantilla ${categoria}:`, error.message);
+                return;
+            }
+
+            const jugadores = new Map((data || [])
+                .filter(jugador => jugador.nombre && jugador.id_jugador !== null)
+                .map(jugador => [normalizarNombre(jugador.nombre), jugador]));
+            const ids = Array.from(jugadores.values(), jugador => Number(jugador.id_jugador))
+                .filter(Number.isSafeInteger);
+            jugadoresPorCategoria.set(categoria, jugadores);
+            siguienteIdPorCategoria.set(categoria, ids.length > 0 ? Math.max(...ids) + 1 : 1);
         }
 
-        const indicesU15 = [];
+        const indicesJugadores = [];
         for (let i = 0; i < filas.length; i++) {
             const fila = filas[i];
             if (!fila) continue;
-            const nombre = String(fila[5] || '').trim();
-            const esU15 = fila.some(celda =>
-                /\bU\s*-?\s*15\b/i.test(String(celda || '').normalize('NFKC'))
-            );
-            if (esU15 && nombre !== '') {
-                indicesU15.push(i);
+            const nombre = String(fila[indiceNombre] || '').trim();
+            if (nombre === '') continue;
+
+            const categoria = categorias.find(item => fila.some(celda =>
+                new RegExp(`\\bU\\s*-?\\s*${item.slice(1)}\\b`, 'i')
+                    .test(String(celda || '').normalize('NFKC'))
+            ));
+            if (!categoria) continue;
+
+            const nombreCompleto = `${nombre} ${String(fila[indiceApellido1] || '').trim()}`.trim();
+            const jugadores = jugadoresPorCategoria.get(categoria);
+            let jugadorPlantilla = jugadores.get(normalizarNombre(nombreCompleto));
+            if (!jugadorPlantilla) {
+                jugadorPlantilla = {
+                    id_jugador: siguienteIdPorCategoria.get(categoria),
+                    nombre: nombreCompleto,
+                    posicion: 'INV'
+                };
+                siguienteIdPorCategoria.set(categoria, jugadorPlantilla.id_jugador + 1);
+                jugadores.set(normalizarNombre(nombreCompleto), jugadorPlantilla);
             }
+            indicesJugadores.push({ rowIdx: i, categoria, jugadorPlantilla });
         }
 
-        console.log(`Jugadores U15 detectados: ${indicesU15.length}`);
-
-        if (indicesU15.length === 0) {
-            console.error("Error: No se encontraron jugadores U15 en la hoja en línea.");
+        if (indicesJugadores.length === 0) {
+            console.error('Error: No se encontraron jugadores U13 ni U15 en la hoja en línea.');
             return;
         }
 
-        const entrenamientosOficiales = [];
-        for (let idx = indiceInicioEntrenamientos; idx < indiceInicioConvocatorias; idx++) {
-            const celdaFecha = filaFechas[idx];
-            if (celdaFecha === undefined || celdaFecha === null || String(celdaFecha).trim() === '') continue;
+        for (const categoria of categorias) {
+            const cantidad = indicesJugadores.filter(jugador => jugador.categoria === categoria).length;
+            console.log(`Jugadores ${categoria} detectados: ${cantidad}`);
+        }
 
-            let huboEntrenamiento = false;
-            for (const rowIdx of indicesU15) {
-                if (obtenerEstadoEntrenamiento(filas[rowIdx][idx]) !== null) {
-                    huboEntrenamiento = true;
-                    break;
+        const encabezadosSeccion = filas[3] || [];
+        const indiceAsistencia = encabezadosSeccion.findIndex(valor =>
+            normalizarEncabezado(valor) === 'asistencia 2026'
+        );
+        const indiceConvocatorias = encabezadosSeccion.findIndex(valor =>
+            normalizarEncabezado(valor) === 'convocatorias 2026'
+        );
+        if (indiceAsistencia === -1 || indiceConvocatorias <= indiceAsistencia) {
+            console.error('Error: No se encontraron los encabezados de asistencia y convocatorias.');
+            return;
+        }
+
+        const columnasEntrenamientos = [];
+        for (let idx = indiceAsistencia + 1; idx < indiceConvocatorias; idx++) {
+            const fecha = parsearFechaExcel(filaFechas[idx]);
+            if (fecha) columnasEntrenamientos.push({ colIndex: idx, fecha });
+        }
+        columnasEntrenamientos.sort((a, b) => a.fecha - b.fecha);
+
+        const columnasPartidos = [];
+        const inicioPartidos = indiceConvocatorias + 1;
+        for (let idx = inicioPartidos; idx < indicePartidosJugados; idx++) {
+            let fecha = parsearFechaExcel(filaFechas[idx]);
+            for (let distancia = 1; !fecha && (idx - distancia >= inicioPartidos || idx + distancia < indicePartidosJugados); distancia++) {
+                fecha = idx + distancia < indicePartidosJugados
+                    ? parsearFechaExcel(filaFechas[idx + distancia])
+                    : null;
+                if (!fecha && idx - distancia >= inicioPartidos) {
+                    fecha = parsearFechaExcel(filaFechas[idx - distancia]);
                 }
             }
-
-            if (huboEntrenamiento) {
-                const fechaObj = parsearFechaExcel(celdaFecha);
-                if (!fechaObj) continue;
-                entrenamientosOficiales.push({ colIndex: idx, fecha: fechaObj });
-            }
+            if (fecha) columnasPartidos.push({ colIndex: idx, fecha });
         }
+        columnasPartidos.sort((a, b) => a.fecha - b.fecha);
 
-        const partidosOficiales = [];
-        for (let idx = indiceInicioConvocatorias; idx < filaFechas.length; idx++) {
-            const celdaFecha = filaFechas[idx];
-            if (celdaFecha === undefined || celdaFecha === null || String(celdaFecha).trim() === '') continue;
+        const obtenerMarcaEntrenamiento = valor => {
+            if (valor === undefined || valor === null || String(valor).trim() === '') return null;
+            const numero = Number(valor);
+            return [0, 0.5, 1].includes(numero) ? numero : null;
+        };
+        const obtenerMarcaPartido = valor => {
+            const marca = String(valor ?? '').trim().toUpperCase();
+            return ['X', 'P(X)', '1', '1.0'].includes(marca) ? marca : null;
+        };
 
-            const huboPartido = indicesU15.some(rowIdx => obtenerEstadoPartido(filas[rowIdx][idx]) !== null);
-            if (!huboPartido) continue;
+        const contadores = new Map(categorias.map(categoria => [categoria, 0]));
 
-            const fecha = parsearFechaExcel(celdaFecha);
-            if (fecha) partidosOficiales.push({ colIndex: idx, fecha });
-        }
-
-        let contadorU15 = 0;
-
-        for (const rowIdx of indicesU15) {
+        for (const { rowIdx, categoria, jugadorPlantilla } of indicesJugadores) {
             const fila = filas[rowIdx];
-            const nombre = fila[5];
-            const apellido1 = fila[3];
+            const nombre = fila[indiceNombre];
+            const apellido1 = fila[indiceApellido1];
 
             if (!nombre) continue;
 
-            contadorU15++;
+            contadores.set(categoria, contadores.get(categoria) + 1);
             const nombreCompleto = `${String(nombre).trim()} ${String(apellido1 || '').trim()}`;
-            const fechaInscripcion = parsearFechaExcel(fila[15]);
-            const anioInscripcion = fechaInscripcion?.getUTCFullYear();
-            const inscripcionDesde2026 = anioInscripcion >= 2026;
-            const cuentaDesdeInscripcion = item => !inscripcionDesde2026
-                || !fechaInscripcion
-                || item.fecha >= fechaInscripcion;
-            const entrenamientosContables = entrenamientosOficiales.filter(cuentaDesdeInscripcion);
-            const partidosContables = partidosOficiales.filter(cuentaDesdeInscripcion);
-            const entrenamientosDelJugador = entrenamientosContables.filter(item =>
-                obtenerEstadoEntrenamiento(fila[item.colIndex]) !== null
+            const fechaInscripcion = parsearFechaExcel(fila[indiceFechaInscripcion]);
+            const calcularDesdeInscripcion = fechaInscripcion?.getUTCFullYear() === ANIO_ACTUAL;
+            const fechaPermitida = fecha => !calcularDesdeInscripcion || esFechaIgualOPosterior(fecha, fechaInscripcion);
+            const obtenerValorAnual = indice => {
+                const valor = fila[indice];
+                return valor !== undefined && valor !== null && String(valor).trim() !== '' ? valor : 0;
+            };
+            const entrenamientosDelJugador = columnasEntrenamientos.filter(item =>
+                fechaPermitida(item.fecha)
+                && obtenerMarcaEntrenamiento(fila[item.colIndex]) !== null
             );
-            const partidosDelJugador = partidosContables.filter(item =>
-                obtenerEstadoPartido(fila[item.colIndex]) !== null
-            );
+            const entrenamientosAsistidos = obtenerValorAnual(indiceEntrenamientosCumplidos);
+            const totalEntrenamientos = calcularDesdeInscripcion
+                ? entrenamientosDelJugador.length
+                : obtenerValorAnual(indiceEntrenamientosOfrecidos);
 
-            const cumplidos = entrenamientosDelJugador.reduce((total, item) =>
-                total + (obtenerEstadoEntrenamiento(fila[item.colIndex]) === 1 ? 1 : 0), 0
+            const partidosDelJugador = columnasPartidos.filter(item =>
+                fechaPermitida(item.fecha)
+                && obtenerMarcaPartido(fila[item.colIndex]) !== null
             );
-            const jugadosDesdeCeldas = partidosDelJugador.reduce((total, item) =>
-                total + (obtenerEstadoPartido(fila[item.colIndex]) === 1 ? 1 : 0), 0
-            );
-            const ofrecidos = inscripcionDesde2026
-                ? entrenamientosContables.length
-                : obtenerNumeroResumen(fila[22]);
-            const jugados = inscripcionDesde2026
-                ? jugadosDesdeCeldas
-                : obtenerNumeroResumen(fila[145]);
-            const programados = inscripcionDesde2026
-                ? partidosContables.length
-                : obtenerNumeroResumen(fila[146]);
-            const textoEntrenamientos = `${cumplidos}/${ofrecidos}`;
-            const textoPartidos = `${jugados}/${programados}`;
+            const partidosAsistidos = obtenerValorAnual(indicePartidosJugados);
+            const totalPartidos = calcularDesdeInscripcion
+                ? partidosDelJugador.length
+                : obtenerValorAnual(indicePartidosProgramados);
 
-            const sesionesUltimosCinco = entrenamientosDelJugador.length > 5
-                ? entrenamientosDelJugador.slice(-5)
-                : entrenamientosOficiales.slice(-5);
-            const ultimasFechasData = sesionesUltimosCinco.map(item => {
+            const textoEntrenamientos = `${entrenamientosAsistidos}/${totalEntrenamientos}`;
+            const textoPartidos = `${partidosAsistidos}/${totalPartidos}`;
+
+            const entrenamientosParaUltimasFechas = entrenamientosDelJugador.slice(-5);
+            const ultimasFechasData = entrenamientosParaUltimasFechas.map(item => {
                 const dia = String(item.fecha.getUTCDate()).padStart(2, '0');
-                const mes = String(item.fecha.getUTCMonth() + 1).padStart(2, '0');
-                const anio = item.fecha.getUTCFullYear();
-                const estado = obtenerEstadoEntrenamiento(fila[item.colIndex]);
-                const noInscritoAun = inscripcionDesde2026 && fechaInscripcion && item.fecha < fechaInscripcion;
-                const textoMostrar = noInscritoAun ? 'NA' : estado === 1 ? '1' : '0';
+                const mes = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][item.fecha.getUTCMonth()];
+                const marca = obtenerMarcaEntrenamiento(fila[item.colIndex]);
 
-                return { fecha: `${anio}-${mes}-${dia}`, asistio: textoMostrar };
+                return {
+                    fecha: `${dia}-${mes}`,
+                    asistio: marca
+                };
             });
+            while (ultimasFechasData.length < 5) {
+                ultimasFechasData.unshift({ fecha: 'NA', asistio: 'NA' });
+            }
 
-            const fechaInscripcionLimpia = formatearFechaDDMMYYYY(fila[15]);
-            const dorsalExcel = fila[columnasDatosJugador.dorsal];
-            const textoDorsal = String(dorsalExcel ?? '').trim();
-            const dorsal = textoDorsal === '' || textoDorsal.toUpperCase() === 'NULL' ? '-' : textoDorsal;
-            const fechaNacimiento = parsearFechaExcel(fila[columnasDatosJugador.fechaNacimiento]);
-            const posicion = obtenerPosicionU15(nombre, apellido1, jugadoresU15DelIndex);
+            const fechaInscripcionLimpia = formatearFechaDDMMYYYY(fila[indiceFechaInscripcion]);
+            const valorDorsal = fila[indiceDorsal];
+            const dorsal = valorDorsal !== undefined && valorDorsal !== null && String(valorDorsal).trim() !== ''
+                && Number.isFinite(Number(valorDorsal)) ? Number(valorDorsal) : null;
+            const fechaNacimiento = parsearFechaExcel(fila[indiceFechaNacimiento]);
 
             const datosJugador = {
-                id_jugador: Number(fila[1]) || contadorU15,
+                id_jugador: jugadorPlantilla.id_jugador,
                 nombre: nombreCompleto,
-                dorsal,
-                posicion,
-                anio_nacimiento: fechaNacimiento?.getUTCFullYear() ?? null,
                 entrenamientos: textoEntrenamientos,
                 partidos: textoPartidos,
                 fecha_inscripcion: fechaInscripcionLimpia,
-                ultimas_fechas: ultimasFechasData
+                ultimas_fechas: ultimasFechasData,
+                dorsal,
+                posicion: jugadorPlantilla.posicion,
+                anio_nacimiento: fechaNacimiento ? fechaNacimiento.getUTCFullYear() : null
             };
 
-            const { error } = await supabase.from('Estadísticas_U15').upsert(datosJugador, { onConflict: 'id_jugador' });
+            const { error } = await supabase
+                .from(`Estadísticas_${categoria}`)
+                .upsert(datosJugador, { onConflict: 'id_jugador' });
 
             if (error) {
                 console.error(`  -> Error al subir a ${datosJugador.nombre}:`, error.message);
             } else {
-                console.log(`  -> Sincronizado U15: ${datosJugador.nombre} | Entrenamientos: ${textoEntrenamientos} | Partidos: ${textoPartidos}`);
+                console.log(`  -> Sincronizado ${categoria}: ${datosJugador.nombre} | Posición: ${datosJugador.posicion} | Entrenamientos: ${textoEntrenamientos} | Partidos: ${textoPartidos}`);
             }
         }
 
-        console.log(`¡Sincronización completa! Se procesaron ${contadorU15} jugadores de la U15 en línea.`);
+        for (const categoria of categorias) {
+            console.log(`Sincronización ${categoria} completa: ${contadores.get(categoria)} jugadores procesados.`);
+        }
 
     } catch (error) {
         console.error('Ocurrió un error general descargando de Google Sheets:', error.message);
     }
 }
 
-sincronizarU15();
+sincronizarCategorias();
