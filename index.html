@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1100">
-    <title>Convocatoria U15 - Real Sevilla FC</title>
+    <title>Convocatorias U15 - Real Sevilla FC</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -91,19 +91,10 @@
         }
 
         .header-subtitulo {
-            margin: 0 0 8px;
+            margin: 0 0 20px;
             color: #d8cba9;
             font-size: 20px;
             font-weight: 600;
-            line-height: 1.3;
-        }
-
-        .header-anno {
-            margin: 0 0 8px;
-            color: #d8cba9;
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
             line-height: 1.3;
         }
 
@@ -129,8 +120,8 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             border-radius: 12px;
             flex-wrap: wrap;
-            margin-top: 15px;
             margin-bottom: 30px;
+            margin-top: 15px;
         }
 
         .control-grupo {
@@ -732,7 +723,6 @@
             max-height: none;
             overflow-y: auto;
             scrollbar-width: none;
-            touch-action: pan-y;
         }
 
         .invitados-lista::-webkit-scrollbar {
@@ -1027,13 +1017,36 @@
             z-index: 2;
         }
 
+        .lista-convocados > .jugador-convocado:nth-child(odd):last-child {
+            grid-column: 1 / -1;
+            justify-self: center;
+            width: calc(50% - 6px);
+        }
+
+        .resumen-posiciones-convocados {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 22px;
+            position: relative;
+            z-index: 2;
+            margin-top: 14px;
+            padding-top: 9px;
+            border-top: 1px solid rgba(207, 168, 88, 0.28);
+            color: var(--color-crema-oscuro);
+            font-size: 13px;
+            font-weight: 900;
+            text-align: center;
+        }
+
         .no-convocados-exportacion {
             display: none;
+            position: relative;
+            z-index: 2;
             margin-top: 24px;
             padding-top: 16px;
             border-top: 1px solid rgba(207, 168, 88, 0.42);
-            position: relative;
-            z-index: 2;
         }
 
         .no-convocados-exportacion h3 {
@@ -1089,29 +1102,6 @@
             font-size: 9px;
             font-weight: 800;
             text-transform: uppercase;
-        }
-
-        .lista-convocados > .jugador-convocado:nth-child(odd):last-child {
-            grid-column: 1 / -1;
-            justify-self: center;
-            width: calc(50% - 6px);
-        }
-
-        .resumen-posiciones-convocados {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px 22px;
-            position: relative;
-            z-index: 2;
-            margin-top: 14px;
-            padding-top: 9px;
-            border-top: 1px solid rgba(207, 168, 88, 0.28);
-            color: var(--color-crema-oscuro);
-            font-size: 13px;
-            font-weight: 900;
-            text-align: center;
         }
 
         .lista-convocados-wrapper {
@@ -1476,14 +1466,6 @@
 
         .modal-ayuda-contenido {
             width: min(520px, 94vw);
-            max-height: min(82vh, 720px);
-            overflow-y: auto;
-            scrollbar-width: none;
-            touch-action: pan-y;
-        }
-
-        .modal-ayuda-contenido::-webkit-scrollbar {
-            display: none;
         }
 
         .modal-ayuda .modal-advertencia-titulo::before {
@@ -1917,8 +1899,7 @@
     <div class="header-app">
         <img src="Real_Sevilla.png" alt="Escudo Real Sevilla FC" class="header-logo">
         <h1>Convocatoria U15</h1>
-        <p class="header-anno">2011-2012</p>
-        <p class="header-subtitulo">DT: Carlos López</p>
+        <p class="header-subtitulo">2011-2012<br>DT: Carlos López</p>
         <div class="controles-superiores">
             <div class="control-grupo">
                 <label id="label-select-torneo" for="boton-select-torneo">Torneo</label>
@@ -2087,7 +2068,7 @@
 
     <div class="modal-advertencia modal-ayuda" id="modal-ayuda" onclick="cerrarModalAyuda(event)">
         <div class="modal-advertencia-contenido modal-ayuda-contenido" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-ayuda">
-            <h3 class="modal-advertencia-titulo" id="titulo-modal-ayuda">Centro de Ayuda</h3>
+            <h3 class="modal-advertencia-titulo" id="titulo-modal-ayuda">Centro de Ayudas</h3>
             <div class="lista-ayuda">
                 <div>
                     <button class="boton-pregunta-ayuda" type="button" aria-expanded="false" aria-controls="respuesta-convocar">¿Cómo convocar?</button>
@@ -2116,9 +2097,6 @@
         const SUPABASE_URL = 'https://fjbbrzhqlvbkliskslqs.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_QRpv4Rs_fIJ8kXvTegR25w_t2SRSExp';
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const CATEGORIA_ACTUAL = 'U15';
-        const categoriasInvitados = ['U7', 'U9', 'U11', 'U13', 'U15', 'U17', 'U19'];
-        const categoriasConFichaJugador = ['U7', 'U9', 'U11', 'U13', 'U17', 'U19'];
 
         const baseDeDatosJugadores = [
             { id: 1, dorsal: 8, nombre: "Elías Torres", posicion: "MED", anioNacimiento: 2011},
@@ -2146,11 +2124,43 @@
             { id: 23, dorsal: 24, nombre: "Jeikel Brenes", posicion: "OFE", anioNacimiento: 2011},
             { id: 24, dorsal: "-", nombre: "Santiago Matamoros", posicion: "MED", anioNacimiento: 2011, noDisponibleEn: ["Torneo Independencia 2026", "Torneo Progol Liga Menor"] }
         ];
+
+        function normalizarNombreJugador(nombre) {
+            return String(nombre ?? '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, ' ')
+                .trim();
+        }
+
+        async function cargarFotosJugadoresU15() {
+            try {
+                const { data, error } = await _supabase
+                    .from('Estadísticas_U15')
+                    .select('nombre,foto');
+
+                if (error) throw error;
+
+                const fotosPorNombre = new Map((data || [])
+                    .filter(jugador => jugador.nombre && jugador.foto)
+                    .map(jugador => [normalizarNombreJugador(jugador.nombre), jugador.foto]));
+
+                baseDeDatosJugadores.forEach(jugador => {
+                    jugador.foto = fotosPorNombre.get(normalizarNombreJugador(jugador.nombreEstadisticas || jugador.nombre)) || '';
+                });
+            } catch (error) {
+                console.error('Error al cargar jugadores desde Estadísticas_U15:', error.message);
+            }
+        }
         
+        const CATEGORIA_ACTUAL = 'U15';
+        const categoriasInvitados = ['U7', 'U9', 'U11', 'U13', 'U15', 'U17', 'U19'];
         let convocadosIds = [];
         const panelPlantilla = document.querySelector('.panel-plantilla');
         const contDisponibles = document.getElementById('lista-disponibles');
         const contSeleccionados = document.getElementById('lista-seleccionados');
+        const contNoConvocados = document.getElementById('lista-no-convocados');
         const resumenPosicionesConvocados = document.getElementById('resumen-posiciones-convocados');
         const lienzoPrincipal = document.getElementById('lienzo');
         const botonDescargar = document.getElementById('btn-descargar');
@@ -2190,15 +2200,6 @@
         }
 
         function compararJugadores(a, b) {
-            const aEsInvitado = Boolean(a.categoriaOrigen);
-            const bEsInvitado = Boolean(b.categoriaOrigen);
-            if (aEsInvitado !== bEsInvitado) {
-                return aEsInvitado ? 1 : -1;
-            }
-            if (aEsInvitado) {
-                return 0;
-            }
-
             const ordenA = ordenPosiciones[a.posicion] || 99;
             const ordenB = ordenPosiciones[b.posicion] || 99;
 
@@ -2206,11 +2207,22 @@
                 return ordenA - ordenB;
             }
 
-            if (a.anioNacimiento !== b.anioNacimiento) {
-                return b.anioNacimiento - a.anioNacimiento;
+            const anioA = Number(a.anioNacimiento) || 0;
+            const anioB = Number(b.anioNacimiento) || 0;
+            if (anioA !== anioB) {
+                return anioB - anioA;
             }
 
-            return (ordenBasePorId[a.id] || 0) - (ordenBasePorId[b.id] || 0);
+            return (ordenBasePorId[a.id] ?? Number.MAX_SAFE_INTEGER)
+                - (ordenBasePorId[b.id] ?? Number.MAX_SAFE_INTEGER)
+                || String(a.nombre).localeCompare(String(b.nombre));
+        }
+
+        function obtenerTextoDorsal(jugador) {
+            if (jugador.dorsal === undefined || jugador.dorsal === null || jugador.dorsal === '' || jugador.dorsal === '-') {
+                return '-';
+            }
+            return `#${jugador.dorsal}`;
         }
 
         function obtenerIdsBloqueados() {
@@ -2256,80 +2268,6 @@
             });
         }
 
-        function obtenerTextoDorsal(jugador) {
-            if (jugador.dorsal === undefined || jugador.dorsal === null || jugador.dorsal === '' || jugador.dorsal === '-') {
-                return '-';
-            }
-            return `#${jugador.dorsal}`;
-        }
-
-        async function cargarFotosU15DesdeSupabase() {
-            const { data, error } = await _supabase
-                .from('Estadísticas_U15')
-                .select('nombre,foto')
-                .not('foto', 'is', null);
-
-            if (error) {
-                console.error('Error al cargar fotos U15 desde Supabase:', error.message);
-                return;
-            }
-
-            const normalizarTokens = nombre => String(nombre ?? '')
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase()
-                .split(/[^a-z0-9]+/)
-                .filter(Boolean);
-
-            const fotos = (data || [])
-                .filter(registro => registro.foto)
-                .map(registro => {
-                    const rutaFoto = new URL(registro.foto, SUPABASE_URL).pathname;
-                    const nombreArchivo = decodeURIComponent(rutaFoto.split('/').pop())
-                        .replace(/\.[^.]+$/, '')
-                        .replace(/[_-]+/g, ' ');
-                    const tokens = normalizarTokens(nombreArchivo);
-                    return { foto: registro.foto, tokens, clave: tokens.join(' ') };
-                })
-                .filter(foto => foto.tokens.length > 0);
-            const cantidadPorArchivo = new Map();
-            fotos.forEach(foto => cantidadPorArchivo.set(foto.clave, (cantidadPorArchivo.get(foto.clave) || 0) + 1));
-
-            const coincideToken = (tokenArchivo, tokenJugador) => tokenArchivo === tokenJugador
-                || (tokenArchivo.length === 1 && tokenJugador.startsWith(tokenArchivo));
-            const fotosPendientes = fotos
-                .filter(foto => cantidadPorArchivo.get(foto.clave) === 1)
-                .sort((a, b) => b.tokens.length - a.tokens.length
-                    || b.clave.length - a.clave.length);
-            const jugadoresConFoto = new Set();
-
-            fotosPendientes.forEach(foto => {
-                const coincidencias = baseDeDatosJugadores.filter(jugador => {
-                    if (jugadoresConFoto.has(jugador)) return false;
-                    const tokensJugador = normalizarTokens(jugador.nombre);
-                    if (!coincideToken(foto.tokens[0], tokensJugador[0])) return false;
-
-                    let siguienteTokenJugador = 1;
-                    return foto.tokens.slice(1).every(tokenArchivo => {
-                        const indice = tokensJugador.findIndex((tokenJugador, indiceJugador) =>
-                            indiceJugador >= siguienteTokenJugador
-                            && coincideToken(tokenArchivo, tokenJugador)
-                        );
-                        if (indice < 0) return false;
-                        siguienteTokenJugador = indice + 1;
-                        return true;
-                    });
-                });
-
-                if (coincidencias.length === 1) {
-                    coincidencias[0].foto = foto.foto;
-                    jugadoresConFoto.add(coincidencias[0]);
-                }
-            });
-
-            renderizarListas();
-        }
-
         function obtenerLimiteCuposNormalizado() {
             const inputCupos = document.getElementById('input-cupos');
             const valorActual = parseInt(inputCupos.value, 10);
@@ -2361,9 +2299,10 @@
             modalAdvertencia.classList.remove('abierto');
         }
 
-        async function abrirModalEstadisticas(nombreJugador) {
+        async function abrirModalEstadisticas(jugador) {
+            const nombreJugador = jugador.nombre;
+            const nombreRegistroEstadisticas = jugador.nombreEstadisticas || nombreJugador;
             modalEstadisticasJugador.innerText = nombreJugador;
-            const jugador = baseDeDatosJugadores.find(item => item.nombre === nombreJugador);
             modalEstadisticasAvatar.setAttribute('aria-label', `Foto de ${nombreJugador}`);
             const mostrarSilueta = () => {
                 modalEstadisticasAvatar.classList.add('sin-foto');
@@ -2396,9 +2335,9 @@
 
             try {
                 const { data, error } = await _supabase
-                    .from('Estadísticas_U15')
+                    .from(`Estadísticas_${CATEGORIA_ACTUAL}`)
                     .select('*')
-                    .eq('nombre', jugador?.nombreEstadisticas || nombreJugador)
+                    .eq('nombre', nombreRegistroEstadisticas)
                     .single();
 
                 if (data && !error) {
@@ -2418,42 +2357,30 @@
                         };
                         return meses[String(mesStr).toLowerCase().substring(0, 3)];
                     };
-                    const obtenerFechaEntrenamiento = fechaStr => {
-                        const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(fechaStr));
-                        if (iso) {
-                            const fecha = new Date(Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])));
-                            return Number.isNaN(fecha.getTime()) ? null : fecha;
-                        }
-
+                    const obtenerLetraDia = fechaStr => {
                         const partes = String(fechaStr).split('-');
-                        if (partes.length < 2) return null;
+                        if (partes.length < 2) return '-';
+
                         const dia = parseInt(partes[0], 10);
                         const mes = obtenerMesNumero(partes[1]);
-                        if (!Number.isInteger(dia) || mes === undefined) return null;
-                        return new Date(Date.UTC(2026, mes, dia));
+                        if (!Number.isInteger(dia) || mes === undefined) return '-';
+
+                        const fecha = new Date(2026, mes, dia);
+                        if (fecha.getMonth() !== mes || fecha.getDate() !== dia) return '-';
+
+                        return ['D', 'L', 'M', 'K', 'J', 'V', 'S'][fecha.getDay()] || '-';
                     };
-                    const obtenerLetraDia = fechaStr => {
-                        const fecha = obtenerFechaEntrenamiento(fechaStr);
-                        if (!fecha) return '-';
-                        return ['D', 'L', 'M', 'K', 'J', 'V', 'S'][fecha.getUTCDay()] || '-';
-                    };
-                    const formatoFechaEntrenamiento = fechaStr => {
-                        const fecha = obtenerFechaEntrenamiento(fechaStr);
-                        if (!fecha) return String(fechaStr ?? '');
-                        const dia = String(fecha.getUTCDate()).padStart(2, '0');
-                        const mes = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][fecha.getUTCMonth()];
-                        return `${dia}-${mes}`;
-                    };
-                    const formatoSiNo = valor => {
+                    const formatoAsistencia = valor => {
                         if ([1, '1', '1.0'].includes(valor)) return 'SI';
                         if ([0, '0', '0.0'].includes(valor)) return 'NO';
+                        if ([0.5, '0.5'].includes(valor)) return 'NO';
                         return 'NA';
                     };
 
                     if (ultimasFechas.length > 0) {
                         const filas = [];
                         ultimasFechas.forEach(item => {
-                            const asistenciaTexto = formatoSiNo(item?.asistio);
+                            const asistenciaTexto = formatoAsistencia(item?.asistio);
                             const celdaDia = document.createElement('span');
                             const celdaFecha = document.createElement('span');
                             const celdaAsistencia = document.createElement('span');
@@ -2461,12 +2388,12 @@
                             celdaDia.textContent = obtenerLetraDia(item?.fecha);
                             celdaDia.style.fontWeight = '700';
                             celdaDia.style.color = 'var(--dorado)';
-                            celdaFecha.textContent = formatoFechaEntrenamiento(item?.fecha);
+                            celdaFecha.textContent = String(item?.fecha ?? '');
                             celdaAsistencia.textContent = asistenciaTexto;
                             celdaAsistencia.style.fontWeight = '800';
                             let colorTexto = '#4ade80';
                             if (asistenciaTexto === 'NO') colorTexto = '#f87171';
-                            if (asistenciaTexto === 'NA') colorTexto = '#fbbf24';
+                            if (asistenciaTexto === 'NA') colorTexto = '#ffffff';
                             celdaAsistencia.style.color = colorTexto;
 
                             filas.push(celdaDia, celdaFecha, celdaAsistencia);
@@ -2537,7 +2464,7 @@
             elementoFoto.title = 'Toca para ver las estadísticas';
             elementoFoto.onclick = evento => {
                 evento.stopPropagation();
-                abrirModalEstadisticas(jugador.nombre);
+                abrirModalEstadisticas(jugador);
             };
         }
 
@@ -2553,141 +2480,6 @@
                 eliminarJugadorInvitado(jugador.id);
             });
             return boton;
-        }
-
-        function renderizarNoConvocados(idsBloqueados) {
-            const listaNoConvocados = document.getElementById('lista-no-convocados');
-            const jugadoresNoConvocados = baseDeDatosJugadores
-            .filter(jugador => !convocadosIds.includes(jugador.id))
-                .sort(compararJugadores);
-
-            listaNoConvocados.replaceChildren(...jugadoresNoConvocados.map(jugador => {
-                const tarjeta = document.createElement('div');
-                tarjeta.className = 'tarjeta-no-convocado';
-
-                const foto = document.createElement('div');
-                foto.className = `convocado-foto${jugador.foto ? '' : ' sin-foto'}`;
-                if (jugador.foto) {
-                    const imagen = document.createElement('img');
-                    imagen.src = jugador.foto;
-                    imagen.alt = '';
-                    imagen.onerror = () => {
-                        foto.classList.add('sin-foto');
-                        imagen.remove();
-                    };
-                    foto.appendChild(imagen);
-                }
-
-                const informacion = document.createElement('div');
-                informacion.className = 'no-convocado-info';
-                const nombre = document.createElement('div');
-                nombre.className = 'convocado-nombre';
-                nombre.textContent = jugador.nombre;
-                const detalles = document.createElement('div');
-                detalles.className = 'convocado-meta';
-                detalles.textContent = `${jugador.posicion} | ${obtenerTextoDorsal(jugador)} | ${jugador.anioNacimiento}`;
-                informacion.append(nombre, detalles);
-                if (idsBloqueados.includes(jugador.id)) {
-                    const estado = document.createElement('span');
-                    estado.className = 'no-convocado-estado';
-                    estado.textContent = 'No disponible';
-                    informacion.appendChild(estado);
-                }
-                tarjeta.append(foto, informacion);
-                return tarjeta;
-            }));
-        }
-
-        function renderizarListas() {
-            contDisponibles.innerHTML = '';
-            contSeleccionados.innerHTML = '';
-            const contadorDisponibles = document.getElementById('contador-disponibles');
-            const torneoSeleccionado = hayTorneoSeleccionado();
-            panelPlantilla.classList.toggle('torneo-seleccionado', torneoSeleccionado);
-
-            if (!torneoSeleccionado) {
-                convocadosIds = [];
-                document.getElementById('lista-no-convocados').replaceChildren();
-                contadorDisponibles.innerText = '0';
-                actualizarResumenPosicionesConvocados([]);
-                actualizarContador();
-                return;
-            }
-
-            const idsBloqueados = obtenerIdsBloqueados();
-            const idsOcultos = obtenerIdsOcultos();
-            contadorDisponibles.innerText = String(baseDeDatosJugadores.filter(jugador =>
-                !idsBloqueados.includes(jugador.id) && !idsOcultos.includes(jugador.id)
-            ).length);
-
-            convocadosIds = convocadosIds.filter(id => !idsBloqueados.includes(id) && !idsOcultos.includes(id));
-
-            // 1. Renderizar Cartas de Disponibles
-            const jugadoresDisponibles = baseDeDatosJugadores
-                .filter(jugador => !convocadosIds.includes(jugador.id) && !idsOcultos.includes(jugador.id))
-                .sort(compararJugadores);
-
-            jugadoresDisponibles.forEach(jugador => {
-                    const carta = document.createElement('div');
-                    const estaBloqueado = idsBloqueados.includes(jugador.id);
-                    carta.className = estaBloqueado ? 'carta-jugador bloqueado' : 'carta-jugador';
-                    if (!estaBloqueado) {
-                        carta.onclick = (evento) => agregarJugador(jugador.id, evento);
-                    }
-                    
-                    const etiquetaBloqueado = estaBloqueado ? '<div class="carta-bloqueado">No disponible</div>' : '';
-                    const textoDorsal = obtenerTextoDorsal(jugador);
-
-                    carta.innerHTML = `
-                        <div class="carta-posicion">${jugador.posicion}</div>
-                        ${etiquetaBloqueado}
-                        <div class="carta-foto${jugador.foto ? '' : ' sin-foto'}" aria-label="Foto de ${jugador.nombre}">
-                            ${jugador.foto ? `<img src="${jugador.foto}" alt="Foto de ${jugador.nombre}" onerror="this.parentElement.classList.add('sin-foto');this.remove()">` : ''}
-                        </div>
-                        <div class="carta-nombre" title="${jugador.nombre}">${jugador.nombre}</div>
-                        <div class="carta-anio">${jugador.anioNacimiento}</div>
-                        <div class="carta-dorsal">${textoDorsal}</div>
-                    `;
-                    hacerFotoInteractiva(carta.querySelector('.carta-foto'), jugador, !estaBloqueado);
-                    if (jugador.categoriaOrigen) {
-                        carta.appendChild(crearBotonEliminarInvitado(jugador));
-                    }
-                    carta.title = estaBloqueado ? 'Jugador bloqueado para este torneo' : 'Toque para convocar';
-                    contDisponibles.appendChild(carta);
-            });
-
-                    const cartaAnadir = document.createElement('button');
-                    cartaAnadir.className = 'carta-jugador carta-anadir';
-                    cartaAnadir.type = 'button';
-                    cartaAnadir.setAttribute('aria-label', 'Añadir jugador de otra categoría');
-                    cartaAnadir.innerHTML = '<span class="carta-foto carta-foto-anadir" aria-hidden="true">+</span><span class="carta-nombre">Añadir</span>';
-                    cartaAnadir.addEventListener('click', abrirModalInvitados);
-                    contDisponibles.appendChild(cartaAnadir);
-
-            const jugadoresConvocados = baseDeDatosJugadores
-                .filter(j => convocadosIds.includes(j.id))
-                .sort(compararJugadores);
-
-            jugadoresConvocados.forEach(jugador => {
-                const div = document.createElement('div');
-                div.className = 'jugador-convocado';
-                const textoDorsal = obtenerTextoDorsal(jugador);
-                div.innerHTML = `
-                    <div class="convocado-foto${jugador.foto ? '' : ' sin-foto'}" aria-label="Foto de ${jugador.nombre}">
-                        ${jugador.foto ? `<img src="${jugador.foto}" alt="Foto de ${jugador.nombre}" onerror="this.parentElement.classList.add('sin-foto');this.remove()">` : ''}
-                    </div>
-                    <div class="convocado-nombre" title="${jugador.nombre}">${jugador.nombre}</div>
-                    <div class="convocado-meta">${jugador.posicion} | ${textoDorsal} | ${jugador.anioNacimiento}</div>
-                `;
-                hacerFotoInteractiva(div.querySelector('.convocado-foto'), jugador);
-                div.title = 'Toca para quitar de la convocatoria';
-                div.onclick = () => quitarJugador(jugador.id);
-                contSeleccionados.appendChild(div);
-            });
-
-            renderizarNoConvocados(idsBloqueados);
-            actualizarResumenPosicionesConvocados(jugadoresConvocados);
-            actualizarContador();
         }
 
         function abrirModalInvitados() {
@@ -2721,7 +2513,8 @@
             mensajeInvitados.textContent = `Cargando jugadores de ${categoria}...`;
 
             try {
-                const columnasJugador = categoriasConFichaJugador.includes(categoria)
+                const categoriaConDatosCompletos = ['U7', 'U9', 'U11', 'U15', 'U17', 'U19'].includes(categoria);
+                const columnasJugador = categoriaConDatosCompletos
                     ? 'id_jugador,nombre,dorsal,posicion,anio_nacimiento,foto'
                     : 'id_jugador,nombre';
                 const { data, error } = await _supabase
@@ -2761,29 +2554,36 @@
                     const boton = document.createElement('button');
                     boton.className = 'invitado-opcion';
                     boton.type = 'button';
+
                     const contenedorFoto = document.createElement('span');
                     contenedorFoto.className = `invitado-opcion-foto${jugador.foto ? '' : ' sin-foto'}`;
                     if (jugador.foto) {
                         const imagen = document.createElement('img');
                         imagen.src = jugador.foto;
                         imagen.alt = `Foto de ${jugador.nombre}`;
+                        imagen.onerror = () => {
+                            contenedorFoto.classList.add('sin-foto');
+                            imagen.remove();
+                        };
                         contenedorFoto.appendChild(imagen);
                     } else {
                         contenedorFoto.setAttribute('role', 'img');
                         contenedorFoto.setAttribute('aria-label', `Sin foto de ${jugador.nombre}`);
                     }
+
                     const informacion = document.createElement('span');
                     informacion.className = 'invitado-opcion-info';
                     const nombre = document.createElement('span');
                     nombre.className = 'invitado-opcion-nombre';
                     nombre.textContent = jugador.nombre;
                     informacion.appendChild(nombre);
-                    if (categoriasConFichaJugador.includes(categoria)) {
+                    if (categoriaConDatosCompletos) {
                         const detalle = document.createElement('small');
                         detalle.className = 'invitado-opcion-detalle';
                         detalle.textContent = `${jugador.posicion || '-'} | ${jugador.anio_nacimiento ?? '-'}`;
                         informacion.appendChild(detalle);
                     }
+
                     const estado = document.createElement('small');
                     estado.className = 'invitado-opcion-estado';
                     estado.textContent = yaAnadido ? 'Añadido' : 'Añadir';
@@ -2813,7 +2613,7 @@
             } catch (error) {
                 console.error(`Error al cargar jugadores de ${categoria}:`, error.message);
                 mensajeInvitados.classList.remove('invitados-mensaje-subtitulo');
-                mensajeInvitados.textContent = `No se pudo cargar ${categoria}. Comprueba que exista la tabla Estadísticas_${categoria} con las columnas id_jugador y nombre.`;
+                mensajeInvitados.textContent = `No se pudo cargar ${categoria}. Comprueba que exista la tabla Estadísticas_${categoria} con las columnas id_jugador y nombre${['U7', 'U9', 'U11', 'U15', 'U17', 'U19'].includes(categoria) ? ', dorsal, posicion, anio_nacimiento y foto' : ''}.`;
             }
         }
 
@@ -2828,6 +2628,140 @@
         function cerrarModalInvitados(evento) {
             if (evento && evento.target !== modalInvitados) return;
             modalInvitados.classList.remove('abierto');
+        }
+
+        function renderizarNoConvocados(idsBloqueados) {
+            const jugadoresNoConvocados = baseDeDatosJugadores
+                .filter(jugador => !convocadosIds.includes(jugador.id))
+                .sort(compararJugadores);
+
+            contNoConvocados.replaceChildren(...jugadoresNoConvocados.map(jugador => {
+                const tarjeta = document.createElement('div');
+                tarjeta.className = 'tarjeta-no-convocado';
+
+                const foto = document.createElement('div');
+                foto.className = `convocado-foto${jugador.foto ? '' : ' sin-foto'}`;
+                if (jugador.foto) {
+                    const imagen = document.createElement('img');
+                    imagen.src = jugador.foto;
+                    imagen.alt = '';
+                    imagen.onerror = () => {
+                        foto.classList.add('sin-foto');
+                        imagen.remove();
+                    };
+                    foto.appendChild(imagen);
+                }
+
+                const informacion = document.createElement('div');
+                informacion.className = 'no-convocado-info';
+                const nombre = document.createElement('div');
+                nombre.className = 'convocado-nombre';
+                nombre.textContent = jugador.nombre;
+                const detalles = document.createElement('div');
+                detalles.className = 'convocado-meta';
+                detalles.textContent = `${jugador.posicion} | ${obtenerTextoDorsal(jugador)} | ${jugador.anioNacimiento}`;
+                informacion.append(nombre, detalles);
+                if (idsBloqueados.includes(jugador.id)) {
+                    const estado = document.createElement('span');
+                    estado.className = 'no-convocado-estado';
+                    estado.textContent = 'No disponible';
+                    informacion.appendChild(estado);
+                }
+                tarjeta.append(foto, informacion);
+                return tarjeta;
+            }));
+        }
+
+        function renderizarListas() {
+            contDisponibles.innerHTML = '';
+            contSeleccionados.innerHTML = '';
+            contNoConvocados.replaceChildren();
+            const contadorDisponibles = document.getElementById('contador-disponibles');
+            const torneoSeleccionado = hayTorneoSeleccionado();
+            panelPlantilla.classList.toggle('torneo-seleccionado', torneoSeleccionado);
+
+            if (!torneoSeleccionado) {
+                convocadosIds = [];
+                contNoConvocados.replaceChildren();
+                contadorDisponibles.innerText = '0';
+                actualizarResumenPosicionesConvocados([]);
+                actualizarContador();
+                return;
+            }
+
+            const idsBloqueados = obtenerIdsBloqueados();
+            const idsOcultos = obtenerIdsOcultos();
+            contadorDisponibles.innerText = String(baseDeDatosJugadores.filter(jugador =>
+                !idsBloqueados.includes(jugador.id) && !idsOcultos.includes(jugador.id)
+            ).length);
+
+            convocadosIds = convocadosIds.filter(id => !idsBloqueados.includes(id) && !idsOcultos.includes(id));
+
+            // 1. Renderizar Cartas de Disponibles
+            const jugadoresDisponibles = baseDeDatosJugadores
+                .filter(jugador => !convocadosIds.includes(jugador.id) && !idsOcultos.includes(jugador.id))
+                .sort(compararJugadores);
+
+            jugadoresDisponibles.forEach(jugador => {
+                    const carta = document.createElement('div');
+                    const estaBloqueado = idsBloqueados.includes(jugador.id);
+                    carta.className = estaBloqueado ? 'carta-jugador bloqueado' : 'carta-jugador';
+                    if (!estaBloqueado) {
+                        carta.onclick = evento => agregarJugador(jugador.id, evento);
+                    }
+                    
+                    const etiquetaBloqueado = estaBloqueado ? '<div class="carta-bloqueado">No disponible</div>' : '';
+                    const textoDorsal = obtenerTextoDorsal(jugador);
+                    carta.innerHTML = `
+                        <div class="carta-posicion">${jugador.posicion}</div>
+                        ${etiquetaBloqueado}
+                        <div class="carta-foto${jugador.foto ? '' : ' sin-foto'}" aria-label="Foto de ${jugador.nombre}">
+                            ${jugador.foto ? `<img src="${jugador.foto}" alt="Foto de ${jugador.nombre}" onerror="this.parentElement.classList.add('sin-foto');this.remove()">` : ''}
+                        </div>
+                        <div class="carta-nombre" title="${jugador.nombre}">${jugador.nombre}</div>
+                        <div class="carta-anio">${jugador.anioNacimiento}</div>
+                        <div class="carta-dorsal">${textoDorsal}</div>
+                    `;
+                    hacerFotoInteractiva(carta.querySelector('.carta-foto'), jugador, !estaBloqueado);
+                        if (jugador.categoriaOrigen) {
+                        carta.appendChild(crearBotonEliminarInvitado(jugador));
+                        }
+                    carta.title = estaBloqueado ? 'Jugador bloqueado para este torneo' : 'Toque para convocar';
+                    contDisponibles.appendChild(carta);
+            });
+
+                    const cartaAnadir = document.createElement('button');
+                    cartaAnadir.className = 'carta-jugador carta-anadir';
+                    cartaAnadir.type = 'button';
+                    cartaAnadir.setAttribute('aria-label', 'Añadir jugador de otra categoría');
+                    cartaAnadir.innerHTML = '<span class="carta-foto carta-foto-anadir" aria-hidden="true">+</span><span class="carta-nombre">Añadir</span>';
+                    cartaAnadir.addEventListener('click', abrirModalInvitados);
+                    contDisponibles.appendChild(cartaAnadir);
+
+            const jugadoresConvocados = baseDeDatosJugadores
+                .filter(jugador => convocadosIds.includes(jugador.id))
+                .sort(compararJugadores);
+
+            jugadoresConvocados.forEach(jugador => {
+                const div = document.createElement('div');
+                div.className = 'jugador-convocado';
+                const textoDorsal = obtenerTextoDorsal(jugador);
+                div.innerHTML = `
+                    <div class="convocado-foto${jugador.foto ? '' : ' sin-foto'}" aria-label="Foto de ${jugador.nombre}">
+                        ${jugador.foto ? `<img src="${jugador.foto}" alt="Foto de ${jugador.nombre}" onerror="this.parentElement.classList.add('sin-foto');this.remove()">` : ''}
+                    </div>
+                    <div class="convocado-nombre" title="${jugador.nombre}">${jugador.nombre}</div>
+                    <div class="convocado-meta">${jugador.posicion} | ${textoDorsal} | ${jugador.anioNacimiento}</div>
+                `;
+                hacerFotoInteractiva(div.querySelector('.convocado-foto'), jugador);
+                div.title = 'Toca para quitar de la convocatoria';
+                div.onclick = () => quitarJugador(jugador.id);
+                contSeleccionados.appendChild(div);
+            });
+
+            renderizarNoConvocados(idsBloqueados);
+            actualizarResumenPosicionesConvocados(jugadoresConvocados);
+            actualizarContador();
         }
 
         function agregarJugador(idJugador, evento) {
@@ -3079,7 +3013,6 @@
                         if (listaClonada) {
                             listaClonada.style.setProperty('grid-template-columns', 'repeat(3, minmax(0, 1fr))', 'important');
                             listaClonada.style.setProperty('gap', '12px', 'important');
-                            listaClonada.querySelectorAll('.boton-eliminar-invitado').forEach(boton => boton.remove());
 
                             listaClonada.querySelectorAll('.jugador-convocado').forEach(tarjeta => {
                                 tarjeta.style.setProperty('display', 'grid', 'important');
@@ -3109,13 +3042,13 @@
                         }
 
                         const seccionNoConvocadosClonada = documentoClonado.getElementById('seccion-no-convocados');
-                        const listaNoConvocadosClonada = documentoClonado.getElementById('lista-no-convocados');
+                        const noConvocadosClonados = documentoClonado.getElementById('lista-no-convocados');
                         if (seccionNoConvocadosClonada) {
                             seccionNoConvocadosClonada.style.setProperty('display', 'block', 'important');
                         }
-                        if (listaNoConvocadosClonada) {
-                            listaNoConvocadosClonada.style.setProperty('grid-template-columns', 'repeat(3, minmax(0, 1fr))', 'important');
-                            listaNoConvocadosClonada.style.setProperty('gap', '8px', 'important');
+                        if (noConvocadosClonados) {
+                            noConvocadosClonados.style.setProperty('grid-template-columns', 'repeat(3, minmax(0, 1fr))', 'important');
+                            noConvocadosClonados.style.setProperty('gap', '8px', 'important');
                         }
 
                         const contadorClonado = documentoClonado.getElementById('contador-exportacion');
@@ -3164,15 +3097,16 @@
 
         setTimeout(updateScrollProgress, 500);
 
-        window.onload = () => {
+        window.onload = async () => {
+            await cargarFotosJugadoresU15();
             renderizarListas();
-            cargarFotosU15DesdeSupabase();
             updateScrollProgress();
             document.addEventListener('keydown', (evento) => {
                 if (evento.key === 'Escape') {
                     cerrarModalAdvertencia();
                     cerrarModalEstadisticas();
                     cerrarConfirmacionVaciado();
+                    cerrarModalInvitados();
                     cerrarModalAyuda();
                 }
             });
